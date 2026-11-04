@@ -1,0 +1,7 @@
+# Los scripts de shell deben tener fin de línea LF aunque se clonen en Windows;
+# con CRLF el contenedor de PostgreSQL no podría ejecutarlos.
+*.sh   text eol=lf
+*.sql  text eol=lf
+*.py   text eol=lf
+*.yml  text eol=lf
+Dockerfile text eol=lf

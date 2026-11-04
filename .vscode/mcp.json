@@ -1,0 +1,19 @@
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "decor-token",
+      "description": "Token de acceso a Decor MCP (DECOR_TOKEN_* de tu archivo .env)",
+      "password": true
+    }
+  ],
+  "servers": {
+    "decor-supabases": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp",
+      "headers": {
+        "Authorization": "Bearer ${input:decor-token}"
+      }
+    }
+  }
+}

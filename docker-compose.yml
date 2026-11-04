@@ -1,0 +1,44 @@
+# Levanta todo el MVP con un solo comando:   docker compose up --build
+# Requiere un archivo .env (copia de .env.example con tus propios valores).
+services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: decor-db
+    environment:
+      POSTGRES_DB: decor
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DECOR_DB_LECTOR_PASSWORD: ${DECOR_DB_LECTOR_PASSWORD}
+      DECOR_DB_APP_PASSWORD: ${DECOR_DB_APP_PASSWORD}
+      DECOR_TOKEN_ADMIN: ${DECOR_TOKEN_ADMIN}
+      DECOR_TOKEN_COMERCIAL: ${DECOR_TOKEN_COMERCIAL}
+      DECOR_TOKEN_CARTERA: ${DECOR_TOKEN_CARTERA}
+    volumes:
+      # Los scripts se ejecutan en orden alfabético solo la PRIMERA vez.
+      - ./database/01_esquema.sql:/docker-entrypoint-initdb.d/01_esquema.sql:ro
+      - ./database/02_datos_ficticios.sql:/docker-entrypoint-initdb.d/02_datos_ficticios.sql:ro
+      - ./database/03_seguridad.sh:/docker-entrypoint-initdb.d/03_seguridad.sh:ro
+      - decor-datos:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"   # 5433 en tu PC para no chocar con otro PostgreSQL
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d decor"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    container_name: decor-mcp
+    environment:
+      DECOR_DB_LECTOR_URL: postgresql://decor_lector:${DECOR_DB_LECTOR_PASSWORD}@db:5432/decor
+      DECOR_DB_APP_URL: postgresql://decor_app:${DECOR_DB_APP_PASSWORD}@db:5432/decor
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+volumes:
+  decor-datos:
