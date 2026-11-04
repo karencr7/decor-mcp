@@ -16,7 +16,9 @@
 | Usar datos ficticios en lugar del Supabase real | Aceptada (Ley 1581, repositorio público/compartido) | Revisión de `02_datos_ficticios.sql`: nombres, correos y documentos inventados |
 | Validar el SQL con un analizador (`sqlglot`) en vez de buscar la palabra "SELECT" | Aceptada | Pruebas `tests/test_politica_acceso.py` con casos de ataque (`DELETE`, `WITH ... DELETE`, `SELECT INTO`, esquemas internos) |
 | Rol de base de datos de solo lectura además de la política | Aceptada | Prueba manual: `DELETE` rechazado por la política y por la base |
-| *(agreguen aquí lo que ustedes corrigieron o rechazaron)* | | |
+ | La IA propuso inicialmente Java/Spring Boot; tras analizar el diseño recomendó Python con el SDK oficial de MCP | Aceptada | Se ejecutó el proyecto en Docker y la colección Postman pasó 37/37 pruebas |
+   | Docker no instalaba por falta de "Virtual Machine Platform" | Corregido con wsl --install | Docker Desktop quedó en "Engine running" |
+   | Conectar Copilot como cliente MCP | Aceptada | Copilot respondió facturas por oficina y negó el acceso a datos de clientes con el token comercial |
 
 ## Reglas que seguimos
 
