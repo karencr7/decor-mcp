@@ -10,6 +10,11 @@ y la IA responde con datos de la base usando **8 herramientas de solo lectura** 
 
 **Autoras:** Karen Eliana Caicedo · María José Vargas — Diplomado en Ingeniería de Software Asistida por IA, Universidad Santiago de Cali, Módulo 3.
 
+   | Integrante | Aporte principal |
+   |---|---|
+   | Karen Eliana Caicedo | Configuración del entorno, ejecución en Docker, pruebas en Swagger/Postman e integración con Copilot |
+   | María José Vargas | Revisión del diseño, documentación del uso de IA y revisión del Pull Request |
+   
 ---
 
 ## 1. Qué está implementado
