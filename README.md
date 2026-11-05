@@ -192,5 +192,22 @@ Sin variables de base de datos, las 8 pruebas de integración se marcan como *sk
 ## 8. Decisiones y pendientes
 
 - Decisiones de implementación (ADR-08 a ADR-12): [`docs/decisiones-implementacion.md`](docs/decisiones-implementacion.md)
+
+## Implementación y pruebas del MVP
+Se completa la implementación del MVP Decor MCP – Servidor MCP para Grupo Decor SAS, integrando las herramientas de consulta de información empresarial mediante lenguaje natural.
+
+El desarrollo incluye:
+
+Implementación de las 8 herramientas MCP para consultar y analizar información de PostgreSQL.
+Implementación de la política de acceso con validación de tokens, permisos por usuario y restricciones de consultas de solo lectura.
+Integración de FastAPI para exponer los servicios REST.
+Implementación del registro de auditoría para consultas permitidas y rechazadas.
+Configuración de Docker y Docker Compose para facilitar el despliegue.
+Integración con GitHub Copilot como cliente MCP.
+Ejecución de pruebas automatizadas con Postman, obteniendo 37 pruebas aprobadas y 0 fallidas.
+
+Se valida el funcionamiento integral de la solución, incluyendo la conexión a PostgreSQL, la seguridad de las consultas, la persistencia de auditoría y la interacción con IA.
+
+Estado: Implementación integrada y verificada correctamente.
 - Uso responsable de IA en el desarrollo: [`docs/uso-de-ia.md`](docs/uso-de-ia.md)
 - Pendientes: adaptador SMTP, proveedor de IA alterno automático, pool de conexiones, autenticación corporativa (SSO) en lugar de tokens, conexión al Supabase real con autorización de TI.
