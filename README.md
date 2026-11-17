@@ -179,7 +179,7 @@ con el encabezado `Authorization: Bearer <token>` (estrategia de sustitución, T
 ## 6.1 Asistente con IA integrado (Groq) · Módulo 6
 
 Además del cliente MCP externo, la API trae su **propia función con IA**: `POST /api/asistente/preguntar` y una página de demo en **`/asistente`**.
-El LLM de [Groq](https://console.groq.com) (`llama-3.3-70b-versatile`) recibe la pregunta y las 8 herramientas como *tool calling*; cada herramienta
+El LLM de [Groq](https://console.groq.com) (`openai/gpt-oss-120b`, configurable con `DECOR_GROQ_MODELO`) recibe la pregunta y las 8 herramientas como *tool calling*; cada herramienta
 se ejecuta con el **mismo caso de uso**, así que la Política de acceso, los límites y la auditoría (canal `ASISTENTE_IA`) se aplican igual. El LLM nunca toca la base.
 
 | Situación | Respuesta |
@@ -221,6 +221,7 @@ Sin variables de base de datos, las 8 pruebas de integración se marcan como *sk
 
 - Arquitectura C4 (contexto y contenedores): [`docs/arquitectura.md`](docs/arquitectura.md) · ADR del Módulo 6: [`docs/adr/`](docs/adr/)
 - Requisitos (historias y criterios): [`docs/requisitos.md`](docs/requisitos.md)
+- Manual de usuario (asistente, contingencia, administración y errores): [`docs/manual-usuario.md`](docs/manual-usuario.md)
 - Decisiones de implementación (ADR-08 a ADR-12): [`docs/decisiones-implementacion.md`](docs/decisiones-implementacion.md)
 
 ## Implementación y pruebas del MVP
