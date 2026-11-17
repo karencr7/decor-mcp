@@ -130,3 +130,14 @@ def test_cliente_groq_traduce_errores_a_servicio_no_disponible(estado):
     groq, _ = _groq_con(lambda req: httpx.Response(estado, json={}))
     with pytest.raises(ServicioNoDisponible):
         groq.completar([], [])
+
+
+def test_cliente_groq_muestra_el_motivo_y_reintenta_tool_use_failed():
+    fallo = {"error": {"code": "tool_use_failed", "message": "Failed to call a function"}}
+    respuestas = [httpx.Response(400, json=fallo), httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})]
+    groq, enviados = _groq_con(lambda req: respuestas.pop(0))
+    assert groq.completar([], []) == {"content": "ok"} and len(enviados) == 2
+
+    groq, _ = _groq_con(lambda req: httpx.Response(400, json={"error": {"code": "invalid_request", "message": "bad"}}))
+    with pytest.raises(ServicioNoDisponible, match="invalid_request bad"):
+        groq.completar([], [])
