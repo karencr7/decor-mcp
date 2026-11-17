@@ -17,11 +17,14 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from mcp.server.transport_security import TransportSecuritySettings
 
+from app.adaptadores.entrada.api_asistente import registrar_asistente
 from app.adaptadores.entrada.api_rest import registrar_api
 from app.adaptadores.entrada.servidor_mcp import crear_servidor_mcp
+from app.adaptadores.salida.groq import AsistenteNoConfigurado, ClienteGroq
 from app.adaptadores.salida.postgres import (
     RegistroAuditoriaPostgres, RepositorioDatosPostgres, RepositorioUsuariosPostgres,
 )
+from app.aplicacion.asistente import Asistente
 from app.aplicacion.autenticacion import Autenticador
 from app.aplicacion.consultas_predefinidas import ModoContingencia
 from app.aplicacion.ejecutar_consulta import EjecutarConsulta
@@ -51,6 +54,10 @@ def crear_app(config: Configuracion | None = None) -> FastAPI:
     caso_uso = EjecutarConsulta(repositorio, auditoria, PoliticaAcceso())
     contingencia = ModoContingencia(caso_uso)
     autenticador = Autenticador(usuarios)
+
+    # Asistente con IA (Groq). Sin GROQ_API_KEY la API arranca igual y el asistente responde 503.
+    llm = ClienteGroq(config.groq_api_key, config.groq_modelo) if config.groq_api_key else AsistenteNoConfigurado()
+    asistente = Asistente(caso_uso, llm)
 
     # Adaptador de entrada MCP
     mcp = crear_servidor_mcp(caso_uso, autenticador)
@@ -86,6 +93,7 @@ def crear_app(config: Configuracion | None = None) -> FastAPI:
         return RedirectResponse("/docs")
 
     registrar_api(app, caso_uso, contingencia, autenticador, auditoria, verificar_bd)
+    registrar_asistente(app, asistente, autenticador)
 
     # Se monta al final para que las rutas /api y /docs tengan prioridad.
     app.mount("/", mcp_app)
