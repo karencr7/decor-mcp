@@ -35,6 +35,7 @@ class Canal(str, Enum):
     MCP = "MCP"
     REST = "REST"
     CONTINGENCIA = "CONTINGENCIA"
+    ASISTENTE = "ASISTENTE_IA"  # asistente con IA integrado (Groq), Módulo 6
 
 
 @dataclass(frozen=True)
