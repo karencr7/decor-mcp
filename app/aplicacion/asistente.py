@@ -93,7 +93,7 @@ class Asistente:
                 return {"pregunta": pregunta, "respuesta": (respuesta.get("content") or "").strip(),
                         "herramientas_usadas": usadas, "modelo": self._llm.modelo}
 
-            mensajes.append({"role": "assistant", "content": respuesta.get("content"), "tool_calls": llamadas})
+            mensajes.append({"role": "assistant", "content": respuesta.get("content") or "", "tool_calls": llamadas})
             for llamada in llamadas:
                 nombre = llamada["function"]["name"]
                 resultado, ok = self._ejecutar_herramienta(usuario, nombre, llamada["function"].get("arguments"))
