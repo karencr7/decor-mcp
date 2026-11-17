@@ -22,6 +22,9 @@ from app.dominio.modelos import Canal, EntradaAuditoria, ResultadoConsulta, Tabl
 from app.dominio.politica_acceso import PoliticaAcceso
 
 _MAX_DETALLE_AUDITORIA = 2000
+_MAX_LARGO_SQL = 10_000  # caracteres; evita analizar textos enormes con sqlglot
+# Códigos de error que se auditan como DENEGADA (la Política de acceso bloqueó la operación).
+_CODIGOS_DENEGADA = frozenset({"CONSULTA_NO_PERMITIDA", "TABLA_NO_AUTORIZADA"})
 
 
 class EjecutarConsulta:
@@ -94,6 +97,8 @@ class EjecutarConsulta:
                 sql = f'SELECT count(*) AS total FROM public."{t.nombre}" WHERE "{c}"::text = %s'
                 parametros = [str(valor)]
             else:
+                if valor is not None:
+                    raise ParametroInvalido("Si envías 'value' también debes enviar 'column'.")
                 sql = f'SELECT count(*) AS total FROM public."{t.nombre}"'
                 parametros = None
             resultado = self._repo.ejecutar(sql, parametros, 1, PoliticaAcceso.TIEMPO_ANALITICA_S)
@@ -119,6 +124,8 @@ class EjecutarConsulta:
         """query_table (detalle, 2.000 filas) y query_analytics (agregados, 500 filas, 15 s)."""
 
         def operacion():
+            if len(sql) > _MAX_LARGO_SQL:
+                raise ParametroInvalido(f"La consulta supera {_MAX_LARGO_SQL} caracteres.")
             validado = self._politica.validar_sql(usuario, sql)
             limites = self._politica.limites(tipo)
             resultado = self._repo.ejecutar(validado.sql, None, limites.max_filas, limites.tiempo_maximo_s)
@@ -184,7 +191,7 @@ class EjecutarConsulta:
         try:
             resultado, tablas = operacion()
         except ErrorDecor as error:
-            estado = "DENEGADA" if error.codigo in ("CONSULTA_NO_PERMITIDA", "TABLA_NO_AUTORIZADA") else "ERROR"
+            estado = "DENEGADA" if error.codigo in _CODIGOS_DENEGADA else "ERROR"
             self._auditoria.registrar(EntradaAuditoria(
                 correo=usuario.correo, canal=canal, herramienta=herramienta, resultado=estado,
                 detalle=detalle, motivo=error.mensaje[:500], duracion_ms=self._ms(inicio)))
