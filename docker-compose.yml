@@ -34,6 +34,7 @@ services:
     environment:
       DECOR_DB_LECTOR_URL: postgresql://decor_lector:${DECOR_DB_LECTOR_PASSWORD}@db:5432/decor
       DECOR_DB_APP_URL: postgresql://decor_app:${DECOR_DB_APP_PASSWORD}@db:5432/decor
+      GROQ_API_KEY: ${GROQ_API_KEY:-}   # asistente con IA (opcional)
     depends_on:
       db:
         condition: service_healthy
