@@ -1,0 +1,61 @@
+# Integración continua: en cada push y pull request
+#  1) levanta PostgreSQL con los MISMOS scripts de database/ (docker compose)
+#  2) corre las pruebas unitarias + integración con cobertura (pytest)
+#  3) levanta la API y corre la colección Postman con Newman
+# Las claves de abajo son valores desechables solo para la base temporal del CI.
+name: CI
+
+on: [push, pull_request]
+
+env:
+  POSTGRES_USER: decor_admin
+  POSTGRES_PASSWORD: ci_admin_desechable
+  DECOR_DB_LECTOR_PASSWORD: ci_lector_desechable
+  DECOR_DB_APP_PASSWORD: ci_app_desechable
+  DECOR_TOKEN_ADMIN: ci_token_admin_desechable
+  DECOR_TOKEN_COMERCIAL: ci_token_comercial_desechable
+  DECOR_TOKEN_CARTERA: ci_token_cartera_desechable
+  DECOR_DB_LECTOR_URL: postgresql://decor_lector:ci_lector_desechable@localhost:5433/decor
+  DECOR_DB_APP_URL: postgresql://decor_app:ci_app_desechable@localhost:5433/decor
+
+jobs:
+  test:
+    name: Pruebas (pytest + Newman)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Levantar PostgreSQL con datos ficticios
+        run: docker compose up -d --wait db
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt pytest-cov
+
+      - name: Pruebas unitarias e integración con cobertura
+        run: pytest -v --cov=app --cov-report=term-missing
+
+      - name: Levantar la API
+        run: |
+          nohup uvicorn app.main:app --host 127.0.0.1 --port 8000 > api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/api/salud && break; sleep 1; done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Colección Postman con Newman
+        run: |
+          npx --yes newman@6 run postman/Decor_MCP.postman_collection.json \
+            --env-var baseUrl=http://localhost:8000 \
+            --env-var tokenAdmin=$DECOR_TOKEN_ADMIN \
+            --env-var tokenComercial=$DECOR_TOKEN_COMERCIAL \
+            --env-var tokenCartera=$DECOR_TOKEN_CARTERA
+
+      - name: Log de la API si algo falló
+        if: failure()
+        run: cat api.log || true
