@@ -59,3 +59,29 @@ jobs:
       - name: Log de la API si algo falló
         if: failure()
         run: cat api.log || true
+
+  despliegue:
+    name: Imagen de despliegue (Render)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Construir Dockerfile.render
+        run: docker build -f Dockerfile.render -t decor-render .
+
+      - name: Arrancar el contenedor como en Render y verificar
+        run: |
+          docker run -d --name demo -p 8000:10000 -e PORT=10000 \
+            -e POSTGRES_PASSWORD='a+b/c=' -e DECOR_DB_LECTOR_PASSWORD='x+y/z=' -e DECOR_DB_APP_PASSWORD='p/q+r=' \
+            -e DECOR_TOKEN_ADMIN -e DECOR_TOKEN_COMERCIAL -e DECOR_TOKEN_CARTERA \
+            -e RENDER_EXTERNAL_HOSTNAME=decor-mcp.onrender.com decor-render
+          for i in $(seq 1 60); do curl -sf http://localhost:8000/api/salud && break; sleep 2; done
+          curl -sf http://localhost:8000/api/salud | grep -q '"base_datos":"ok"'
+          curl -sf -H "Authorization: Bearer $DECOR_TOKEN_COMERCIAL" http://localhost:8000/api/tablas > /dev/null
+          codigo=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8000/api/asistente/preguntar \
+            -H "Authorization: Bearer $DECOR_TOKEN_COMERCIAL" -H 'Content-Type: application/json' -d '{"pregunta":"hola"}')
+          echo "Asistente sin GROQ_API_KEY -> $codigo (se espera 503)"; test "$codigo" = "503"
+
+      - name: Log del contenedor
+        if: always()
+        run: docker logs demo || true
