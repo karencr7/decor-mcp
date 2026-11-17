@@ -5,3 +5,4 @@ psycopg[binary]==3.3.8
 pydantic-settings==2.16.2
 sqlglot==30.29.0
 anyio==4.16.0
+httpx==0.28.1
