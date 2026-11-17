@@ -19,7 +19,7 @@ flowchart LR
     SYS["🟦 Decor MCP<br/>Servidor MCP + API REST de solo lectura<br/>(datos ficticios)"]
 
     IA["Cliente de IA (externo)<br/>GitHub Copilot en VS Code / Claude"]
-    LLM["Proveedor LLM (externo)<br/>Groq · llama-3.3-70b-versatile"]
+    LLM["Proveedor LLM (externo)<br/>Groq · openai/gpt-oss-120b"]
     DB[("Base de datos (externo)<br/>PostgreSQL 16<br/>réplica local de Supabase")]
 
     COL -->|"pregunta en el chat"| IA
