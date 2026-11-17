@@ -176,11 +176,37 @@ Detalle completo, ejemplos y códigos en [`docs/api.md`](docs/api.md) y en Swagg
 El servidor es MCP estándar, así que también funciona con **Claude** u otro cliente MCP apuntando a `http://localhost:8000/mcp`
 con el encabezado `Authorization: Bearer <token>` (estrategia de sustitución, Tabla 14).
 
+## 6.1 Asistente con IA integrado (Groq) · Módulo 6
+
+Además del cliente MCP externo, la API trae su **propia función con IA**: `POST /api/asistente/preguntar` y una página de demo en **`/asistente`**.
+El LLM de [Groq](https://console.groq.com) (`llama-3.3-70b-versatile`) recibe la pregunta y las 8 herramientas como *tool calling*; cada herramienta
+se ejecuta con el **mismo caso de uso**, así que la Política de acceso, los límites y la auditoría (canal `ASISTENTE_IA`) se aplican igual. El LLM nunca toca la base.
+
+| Situación | Respuesta |
+|---|---|
+| Pregunta válida | `200` con `respuesta`, `herramientas_usadas` y `modelo` |
+| Sin token / token inválido | `401` |
+| Pregunta vacía o de más de 500 caracteres | `422` |
+| Sin `GROQ_API_KEY`, Groq caído o límite de uso | `503` con sugerencia de usar el modo de contingencia |
+
+La llave va **solo** en la variable `GROQ_API_KEY` (archivo `.env` o panel de Render); nunca en el repositorio.
+Código: `app/aplicacion/asistente.py`, `app/adaptadores/salida/groq.py`, `app/adaptadores/entrada/api_asistente.py`.
+
+## 6.2 Despliegue público (Render, plan gratuito)
+
+1. En [render.com](https://render.com) → **New → Blueprint** → elegir este repositorio. Render lee `render.yaml`.
+2. Render genera las claves y los tokens. En **Environment**, pegar la llave en `GROQ_API_KEY`.
+3. Esperar el despliegue y abrir `https://<servicio>.onrender.com/docs` y `/asistente`.
+4. Los tokens de demostración se ven en **Environment** (`DECOR_TOKEN_COMERCIAL`, etc.).
+
+La imagen `Dockerfile.render` levanta PostgreSQL 16 y la API en un solo contenedor (decisión en [ADR-002](docs/adr/ADR-002-base-de-datos-y-despliegue.md)).
+El CI construye y prueba esa misma imagen en cada push. El plan gratuito se duerme tras 15 min: abrir la URL un minuto antes de la demo.
+
 ## 7. Pruebas
 
 | Tipo | Cómo ejecutarlas | Resultado verificado |
 |---|---|---|
-| Unitarias + integración (pytest) | ver abajo | 41 pruebas aprobadas (33 unitarias, 8 de integración contra PostgreSQL) |
+| Unitarias + integración (pytest) | ver abajo | Corren en GitHub Actions en cada push (ver badge): unitarias con dobles + 8 de integración contra PostgreSQL real + colección Postman con Newman + imagen de Render |
 | Colección Postman | Importar `postman/Decor_MCP.postman_collection.json`, poner los tokens en las variables y usar *Run collection* | 31 solicitudes, 37 verificaciones, 0 fallos |
 | Cliente MCP oficial | `initialize` → `tools/list` → `tools/call` | 8 herramientas; errores de política devueltos con `isError: true` |
 
@@ -193,6 +219,8 @@ Sin variables de base de datos, las 8 pruebas de integración se marcan como *sk
 
 ## 8. Decisiones y pendientes
 
+- Arquitectura C4 (contexto y contenedores): [`docs/arquitectura.md`](docs/arquitectura.md) · ADR del Módulo 6: [`docs/adr/`](docs/adr/)
+- Requisitos (historias y criterios): [`docs/requisitos.md`](docs/requisitos.md)
 - Decisiones de implementación (ADR-08 a ADR-12): [`docs/decisiones-implementacion.md`](docs/decisiones-implementacion.md)
 
 ## Implementación y pruebas del MVP
