@@ -94,6 +94,8 @@ class EjecutarConsulta:
                 sql = f'SELECT count(*) AS total FROM public."{t.nombre}" WHERE "{c}"::text = %s'
                 parametros = [str(valor)]
             else:
+                if valor is not None:
+                    raise ParametroInvalido("Si envías 'value' también debes enviar 'column'.")
                 sql = f'SELECT count(*) AS total FROM public."{t.nombre}"'
                 parametros = None
             resultado = self._repo.ejecutar(sql, parametros, 1, PoliticaAcceso.TIEMPO_ANALITICA_S)
