@@ -1,5 +1,7 @@
 # Decor MCP · Asistente de consulta en lenguaje natural (MVP)
 
+[![CI](https://github.com/karencr7/decor-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/karencr7/decor-mcp/actions/workflows/ci.yml)
+
 MVP del **servidor MCP «Decor Supabases»** diseñado en el Módulo 2 (*Propuesta arquitectónica Grupo Decor*).
 Un colaborador le pregunta a una IA, en español, algo como *«¿cuántas facturas emitió cada oficina en septiembre?»*,
 y la IA responde con datos de la base usando **8 herramientas de solo lectura** que expone este servidor.
