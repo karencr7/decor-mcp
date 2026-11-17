@@ -18,6 +18,7 @@ from app.dominio.modelos import Canal, TipoConsulta, Usuario
 MAX_LARGO_PREGUNTA = 500
 MAX_PASOS = 6
 MAX_CARACTERES_RESULTADO = 6000
+# Los parámetros opcionales aceptan null: algunos modelos los envían así y Groq valida el esquema.
 
 INSTRUCCIONES_SISTEMA = (
     "Eres el asistente de datos de Grupo Decor (MVP con datos ficticios). Respondes en español, "
@@ -52,13 +53,13 @@ _SQL = {"sql": {"type": "string", "description": "Una sola sentencia SELECT o WI
 
 HERRAMIENTAS: list[dict[str, Any]] = [
     _herramienta("business_guide", "Mapa del negocio y tablas permitidas para el usuario. Llamar primero.",
-                 {"table": {"type": "string", "description": "Opcional: detalle de una tabla"}}),
+                 {"table": {"type": ["string", "null"], "description": "Opcional: detalle de una tabla"}}),
     _herramienta("list_tables", "Lista las tablas permitidas y sus columnas."),
     _herramienta("describe_table", "Columnas, tipos y descripciones de una tabla.", _TABLA, ["table"]),
     _herramienta("sample_rows", "Filas de ejemplo de una tabla (1 a 50).",
-                 {**_TABLA, "limit": {"type": "integer", "description": "1 a 50"}}, ["table"]),
+                 {**_TABLA, "limit": {"type": ["integer", "null"], "description": "1 a 50"}}, ["table"]),
     _herramienta("count_rows", "Conteo de filas con filtro de igualdad opcional (column = value).",
-                 {**_TABLA, "column": {"type": "string"}, "value": {"type": "string"}}, ["table"]),
+                 {**_TABLA, "column": {"type": ["string", "null"]}, "value": {"type": ["string", "null"]}}, ["table"]),
     _herramienta("list_distinct", "Valores distintos de una columna y su frecuencia.",
                  {**_TABLA, "column": {"type": "string"}}, ["table", "column"]),
     _herramienta("query_table", "SQL de DETALLE (solo SELECT/WITH). Máximo 2.000 filas.", _SQL, ["sql"]),
@@ -135,7 +136,7 @@ class Asistente:
             "business_guide": lambda a: c.guia_negocio(usuario, canal, a.get("table")),
             "list_tables": lambda a: c.listar_tablas(usuario, canal),
             "describe_table": lambda a: c.describir_tabla(usuario, canal, a["table"]),
-            "sample_rows": lambda a: c.muestra_filas(usuario, canal, a["table"], int(a.get("limit", 10))),
+            "sample_rows": lambda a: c.muestra_filas(usuario, canal, a["table"], int(a.get("limit") or 10)),
             "count_rows": lambda a: c.contar_filas(usuario, canal, a["table"], a.get("column"), a.get("value")),
             "list_distinct": lambda a: c.valores_distintos(usuario, canal, a["table"], a["column"]),
             "query_table": lambda a: c.consultar_sql(usuario, canal, a["sql"], TipoConsulta.DETALLE),
