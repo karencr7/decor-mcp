@@ -26,16 +26,32 @@ class ClienteGroq:
     def completar(self, mensajes: list[dict[str, Any]], herramientas: list[dict[str, Any]]) -> dict[str, Any]:
         cuerpo = {"model": self.modelo, "messages": mensajes, "tools": herramientas,
                   "tool_choice": "auto", "temperature": 0.1}
-        try:
-            r = self._http.post(URL_GROQ, json=cuerpo, headers={"Authorization": f"Bearer {self._api_key}"})
-        except httpx.HTTPError as error:
-            raise ServicioNoDisponible(f"No se pudo contactar al proveedor de IA: {type(error).__name__}.") from error
+        for intento in range(2):
+            try:
+                r = self._http.post(URL_GROQ, json=cuerpo, headers={"Authorization": f"Bearer {self._api_key}"})
+            except httpx.HTTPError as error:
+                raise ServicioNoDisponible(f"No se pudo contactar al proveedor de IA: {type(error).__name__}.") from error
+            # A veces el modelo arma mal la llamada a una herramienta (tool_use_failed): se reintenta una vez.
+            if not (r.status_code == 400 and "tool_use_failed" in r.text and intento == 0):
+                break
         if r.status_code == 429:
             raise ServicioNoDisponible("El proveedor de IA alcanzó su límite de uso. Intenta en un minuto "
                                        "o usa el modo de contingencia.")
         if r.status_code >= 400:
-            raise ServicioNoDisponible(f"El proveedor de IA respondió con error {r.status_code}.")
+            raise ServicioNoDisponible(f"El proveedor de IA respondió con error {r.status_code}: {_detalle(r)}")
         return r.json()["choices"][0]["message"]
+
+
+def _detalle(r: httpx.Response) -> str:
+    """Código y mensaje del error de Groq (nunca incluye la llave), para poder diagnosticar."""
+    try:
+        cuerpo = r.json()
+    except ValueError:
+        return r.text[:300]
+    error = cuerpo.get("error") if isinstance(cuerpo, dict) else None
+    if not isinstance(error, dict):
+        return ""
+    return f"{error.get('code') or error.get('type') or ''} {error.get('message') or ''}".strip()[:300]
 
 
 class AsistenteNoConfigurado:
