@@ -22,6 +22,7 @@ from app.dominio.modelos import Canal, EntradaAuditoria, ResultadoConsulta, Tabl
 from app.dominio.politica_acceso import PoliticaAcceso
 
 _MAX_DETALLE_AUDITORIA = 2000
+_MAX_LARGO_SQL = 10_000  # caracteres; evita analizar textos enormes con sqlglot
 
 
 class EjecutarConsulta:
@@ -121,6 +122,8 @@ class EjecutarConsulta:
         """query_table (detalle, 2.000 filas) y query_analytics (agregados, 500 filas, 15 s)."""
 
         def operacion():
+            if len(sql) > _MAX_LARGO_SQL:
+                raise ParametroInvalido(f"La consulta supera {_MAX_LARGO_SQL} caracteres.")
             validado = self._politica.validar_sql(usuario, sql)
             limites = self._politica.limites(tipo)
             resultado = self._repo.ejecutar(validado.sql, None, limites.max_filas, limites.tiempo_maximo_s)
