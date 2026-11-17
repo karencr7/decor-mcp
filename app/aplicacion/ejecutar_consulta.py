@@ -23,6 +23,8 @@ from app.dominio.politica_acceso import PoliticaAcceso
 
 _MAX_DETALLE_AUDITORIA = 2000
 _MAX_LARGO_SQL = 10_000  # caracteres; evita analizar textos enormes con sqlglot
+# Códigos de error que se auditan como DENEGADA (la Política de acceso bloqueó la operación).
+_CODIGOS_DENEGADA = frozenset({"CONSULTA_NO_PERMITIDA", "TABLA_NO_AUTORIZADA"})
 
 
 class EjecutarConsulta:
@@ -189,7 +191,7 @@ class EjecutarConsulta:
         try:
             resultado, tablas = operacion()
         except ErrorDecor as error:
-            estado = "DENEGADA" if error.codigo in ("CONSULTA_NO_PERMITIDA", "TABLA_NO_AUTORIZADA") else "ERROR"
+            estado = "DENEGADA" if error.codigo in _CODIGOS_DENEGADA else "ERROR"
             self._auditoria.registrar(EntradaAuditoria(
                 correo=usuario.correo, canal=canal, herramienta=herramienta, resultado=estado,
                 detalle=detalle, motivo=error.mensaje[:500], duracion_ms=self._ms(inicio)))
