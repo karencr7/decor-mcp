@@ -1,0 +1,27 @@
+# Blueprint de Render: despliegue gratuito de la demo (ver docs/adr/ADR-002).
+# Render genera las claves y tokens; solo hay que pegar GROQ_API_KEY en el panel (nunca en el repo).
+services:
+  - type: web
+    name: decor-mcp
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.render
+    healthCheckPath: /api/salud
+    autoDeploy: true
+    envVars:
+      - key: POSTGRES_USER
+        value: decor_admin
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: DECOR_DB_LECTOR_PASSWORD
+        generateValue: true
+      - key: DECOR_DB_APP_PASSWORD
+        generateValue: true
+      - key: DECOR_TOKEN_ADMIN
+        generateValue: true
+      - key: DECOR_TOKEN_COMERCIAL
+        generateValue: true
+      - key: DECOR_TOKEN_CARTERA
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false
