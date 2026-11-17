@@ -5,6 +5,7 @@ Ver .env.example para la lista de variables, sin valores reales.
 
 from functools import lru_cache
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,6 +20,9 @@ class Configuracion(BaseSettings):
     mcp_hosts_permitidos: str = "localhost:*,127.0.0.1:*,[::1]:*"
     # Segundos que se guarda en memoria el catálogo de tablas.
     catalogo_ttl_s: int = 60
+    # Asistente con IA (Groq). La llave llega por la variable GROQ_API_KEY y nunca se versiona.
+    groq_api_key: str | None = Field(default=None, validation_alias=AliasChoices("GROQ_API_KEY", "DECOR_GROQ_API_KEY"))
+    groq_modelo: str = "llama-3.3-70b-versatile"
 
 
 @lru_cache
