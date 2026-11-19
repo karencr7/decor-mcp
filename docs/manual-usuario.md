@@ -31,9 +31,10 @@ No compartas tu token ni lo escribas en correos o chats.
 ## 3. Usar el asistente con IA (`/asistente`)
 
 1. Abre **https://decor-mcp.onrender.com/asistente**.
-2. En **Token** pega tu token.
-3. En **Pregunta** escribe lo que necesitas saber (máximo 500 caracteres).
-4. Dale **Preguntar** y espera unos segundos.
+2. **Inicia sesión:** escribe tu **usuario** (tu correo, por ejemplo `comercial@decor-demo.co`) y tu **token**, y dale **Ingresar**. Si el usuario o el token no coinciden, verás «Usuario o token incorrectos» (por seguridad no dice cuál de los dos falló).
+3. Verás tu nombre, tu área, **las tablas que puedes consultar** y preguntas sugeridas para tu área.
+4. Escribe tu pregunta (máximo 500 caracteres) y presiona **Enter**, o toca una sugerencia.
+5. Para salir, toca **Cerrar sesión**. El token no se guarda en el navegador: al cerrar la pestaña se borra.
 
 ![Asistente respondiendo una pregunta de negocio](img/asistente-facturas.png)
 
