@@ -141,3 +141,39 @@ def test_cliente_groq_muestra_el_motivo_y_reintenta_tool_use_failed():
     groq, _ = _groq_con(lambda req: httpx.Response(400, json={"error": {"code": "invalid_request", "message": "bad"}}))
     with pytest.raises(ServicioNoDisponible, match="invalid_request bad"):
         groq.completar([], [])
+
+
+def test_cliente_groq_espera_lo_que_indica_groq_y_reintenta_si_llena_el_cupo():
+    esperas = []
+    respuestas = [httpx.Response(429, headers={"retry-after": "7"}, json={}),
+                  httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})]
+    groq = ClienteGroq("llave", modelo="openai/gpt-oss-120b", esperar=esperas.append,
+                       cliente_http=httpx.Client(transport=httpx.MockTransport(lambda req: respuestas.pop(0))))
+    assert groq.completar([], []) == {"content": "ok"} and esperas == [7.0]
+
+
+def test_cliente_groq_usa_el_modelo_de_respaldo_si_el_cupo_sigue_lleno():
+    modelos = []
+
+    def manejador(req):
+        modelos.append(json.loads(req.content)["model"])
+        if len(modelos) == 1:
+            return httpx.Response(429, json={"error": {"code": "rate_limit_exceeded", "message": "TPM"}})
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
+
+    groq = ClienteGroq("llave", modelo="openai/gpt-oss-120b", esperar=lambda s: None,
+                       cliente_http=httpx.Client(transport=httpx.MockTransport(manejador)))
+    assert groq.completar([], []) == {"content": "ok"}
+    assert modelos == ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
+
+
+def test_cliente_groq_pide_razonamiento_bajo_a_gpt_oss_para_ahorrar_cupo():
+    enviados = []
+
+    def manejador(req):
+        enviados.append(json.loads(req.content))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
+
+    ClienteGroq("llave", modelo="openai/gpt-oss-120b",
+                cliente_http=httpx.Client(transport=httpx.MockTransport(manejador))).completar([], [])
+    assert enviados[0]["reasoning_effort"] == "low"
